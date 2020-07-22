@@ -1,0 +1,8 @@
+
+Host pavel_laptop pl
+    User pavel
+    Port 22
+    HostName 192.168.7.60
+    IdentityFile ~/.ssh/server/home/laptop/pl
+    IdentitiesOnly yes
+

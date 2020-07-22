@@ -1,0 +1,3 @@
+# generate and push
+yes | ssh-keygen -t rsa -b 4096 -q -N "" -C "pavel_laptop" -f pl
+ssh-copy-id -i pl.pub pl
