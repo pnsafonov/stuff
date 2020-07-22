@@ -1,0 +1,305 @@
+#!/bin/bash
+
+function disable_beep {
+	#setterm -blength 0
+	:
+}
+
+function set_bash_history {
+	# don't put duplicate lines or lines starting with space in the history.
+	# See bash(1) for more options
+	HISTCONTROL=ignoreboth
+
+	# append to the history file, don't overwrite it
+	shopt -s histappend
+
+	# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+	HISTSIZE=1000
+	HISTFILESIZE=2000
+}
+
+function set_colored_terminal {
+	# set a fancy prompt (non-color, unless we know we "want" color)
+	case "$TERM" in
+		xterm-color|*-256color) color_prompt=yes;;
+	esac
+
+	# uncomment for a colored prompt, if the terminal has the capability; turned
+	# off by default to not distract the user: the focus in a terminal window
+	# should be on the output of commands, not on the prompt
+	force_color_prompt=yes
+
+	if [ -n "$force_color_prompt" ]; then
+		if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+			# We have color support; assume it's compliant with Ecma-48
+			# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+			# a case would tend to support setf rather than setaf.)
+			color_prompt=yes
+		else
+			color_prompt=
+		fi
+	fi
+
+	if [ "$color_prompt" = yes ]; then
+		PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+	else
+		PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+	fi
+	unset color_prompt force_color_prompt
+
+	# If this is an xterm set the title to user@host:dir
+	case "$TERM" in
+	xterm*|rxvt*)
+		PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+		;;
+	*)
+		;;
+	esac
+
+	# enable color support of ls and also add handy aliases
+	if [ -x /usr/bin/dircolors ]; then
+		test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+	fi
+
+	# colored GCC warnings and errors
+	#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+}
+
+function alias_disconsts {
+    objdump -s -j .rodata "$*"
+}
+
+function alias_disas {
+    # objdump -d -S -M intel "$*"
+    objdump -t -S -M intel "$*"
+}
+
+function alias_find {
+	find ./ -name "*$**" -type f -print
+}
+
+function alias_grep_color {
+	grep -r -n --color "$*"
+}
+
+function alias_git_commit {
+	git commit -m "$*"
+}
+
+function alias_git_tag {
+    git tag --sort=-creatordate | head -n 20
+}
+
+function alias_start_explorer {
+	start .
+}
+
+function alias_start_finder {
+    open .
+}
+
+function alias_start_dolphin {
+	kfmclient exec .
+}
+
+function alias_xclip_selection {
+    xclip -selection c
+}
+
+function alias_pwd_to_buffer {
+    pwd
+    if [ -x "$(command -v xclip)" ]; then
+        pwd | xclip -selection c
+    fi
+}
+
+function detect_kde {
+    ps -e | grep -E '^.* kded4$' > /dev/null
+    if [ $? -ne 0 ];
+    then
+        return 0
+    else    
+        return 1
+    fi
+}
+
+# /home/pavel/data/sdk/android/ndk/android-ndk-r16b/standalone/android-21/arm/bin/gdb -ex "set pagination off" -ex "disassemble/s 0xbcd280" -ex "q" libtacita-core-jni.so > libtacita-core-jni_1.txt
+# set pagination off
+# /home/pavel/data/sdk/android/ndk/android-ndk-r16b/standalone/android-21/arm/bin/gdb -ex "disassemble/rs 0xbcd280" libtacita-core-jni.so
+# /home/pavel/data/sdk/android/ndk/android-ndk-r16b/standalone/android-21/arm/bin/gdb libtacita-core-jni.so
+# info address
+# info symbol 0x0144984f
+#
+# listf libtacita-core-jni.so > libtacita-core-jni.so.txt
+# /home/pavel/data/sdk/android/ndk/android-ndk-r16b/standalone/android-21/arm64/bin/gdb libtacita-core-jni.so
+# /home/pavel/data/sdk/android/ndk/android-ndk-r16b/standalone/android-21/arm64/bin/gdb -ex "disassemble/mr 0000000000afc670" libtacita-core-jni.so
+# info address Java_com_tacita_core_generated_tacita_1coreJNI_ProxyIFuture_1is_1successful
+# disassemble/rs 0x0000000000afc660
+# disassemble/rs Java_com_tacita_core_generated_tacita_1coreJNI_ProxyIFuture_1is_1successful
+function gdb_disas {
+    gdb -batch -ex "set disassembly-flavor intel" -ex "disassemble/mr '$2'" $1
+}
+
+function gdb_list_funcs {
+    gdb -batch -ex "info functions $2" $1
+}
+
+function gnu_conf {
+    #eval "`dircolors`"
+    
+    alias l='ls --color=auto -Alh'
+    alias c='cd'
+    alias g='git status'
+	alias ga='git add .'
+	alias gd='git diff'
+	alias gc='alias_git_commit'
+	alias gp='git pull'
+	alias gs='git push'
+    alias gr='alias_grep_color'
+    alias gt='alias_git_tag'
+	# alias gitlb='git branch --sort=committerdate'
+    alias gitlb='git --no-pager branch --sort=committerdate | tail -n 30'
+	alias gitls='git ls-files . --ignored --exclude-standard --others'
+    alias f='alias_find'
+    alias pg='pgrep -fla'
+    alias pt='pstree -ap'
+	alias p='alias_pwd_to_buffer'
+	alias dus='du -sch .[!.]* * | sort -h'
+	alias cf='ls -l | wc -l'
+    alias cls='printf "\033c"'
+    alias x='alias_xclip_selection'
+    
+    alias disf='gdb_disas'
+    alias listf='gdb_list_funcs'
+    alias disas='alias_disas'
+    alias disconsts='alias_disconsts'
+}
+
+function mac_conf {
+
+    gnu_conf
+
+	alias l='ls -AlhG'
+
+    alias run_emacs='alias_run_emacs'
+    alias e='alias_start_finder'
+
+    export CLICOLOR=1
+    export LS_COLORS="no=00:fi=00:di=00;34:ln=00;36:pi=40;33:so=00;35:bd=40;33;01:ex=00;35"
+
+	# PS1="\u@\h:\w$ "
+	PS1="\u:\w$ "
+
+	# \W – Current working directory (ie: Desktop/)
+ 	# \d – Current date
+	# \t – Current time
+	# \h – Host name
+	# \# – Command number
+	# \u – User name
+}
+
+function win_cd {
+	cd $(upath2win "$*")
+}
+
+function dotnet() {
+    local BEFORE=$(stty -g)
+    $(which dotnet) "$@"
+    stty "${BEFORE}"
+}
+
+function set_gnu_vars {
+
+    if [[ -n $ENV_VARS_SET ]]; then
+        # if alredy set return
+        return
+    fi
+    export ENV_VARS_SET=true
+
+    # android, C++
+    export ANDROID_NDK=$HOME/data/sdk/android/ndk/android-ndk-r16b
+    export ANDROID_SDK_HOME=$HOME/data/vm/avd
+    export ANDROID_HOME=$HOME/data/sdk/android/sdk
+    export PATH=/sbin:$PATH
+    export PATH=$HOME/data/utils/cmake/cmake-3.11.0-Linux-x86_64/bin:$PATH
+    export PATH=$HOME/data/utils/protoc/bin:$PATH
+    export PATH=$HOME/data/sdk/android/sdk/platform-tools:$PATH
+
+    # go
+    export GOROOT=/usr/local/go
+    export GOPATH=$HOME/data/go
+    export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+    export PATH=$PATH:$HOME/bin/FlameGraph
+    export PATH=$PATH:$HOME/data/vs/go/go_tools
+
+    # cfengine
+    export PATH=$PATH:/usr/local/sbin
+
+    # dynamorio
+    # drmemory
+    export PATH=$PATH:$HOME/bin/dynamorio/DrMemory-Linux-2.2.0-1/bin64
+    export PATH=$PATH:$HOME/bin/dynamorio/DynamoRIO-Linux-7.1.0-1/bin64
+    export PATH=$PATH:$HOME/bin/dynamorio/DynamoRIO-Linux-7.1.0-1/tools/bin64
+
+    # disable telemetry in dotnet
+    export DOTNET_CLI_TELEMETRY_OPTOUT=1
+
+    # rust
+    export PATH="$HOME/.cargo/bin:$PATH"
+
+    # npm
+    export PATH=$HOME/.npm-global/bin:$PATH
+    export NPM_CONFIG_PREFIX=$HOME/.npm-global
+
+    # vim
+    export PATH=$HOME/bin/utils/xkb-switch/build:$PATH
+}
+
+platform='unknown'
+unamestr=`uname`
+if [[ "$unamestr" == 'Linux' ]]; then
+	platform='linux'
+elif [[ "$unamestr" == 'FreeBSD' ]]; then
+	platform='freebsd'
+#elif [[ == 'MINGW64_NT-10.0' ]]; then
+elif [[ "$unamestr" == *'MINGW'* ]]; then
+	platform='win'
+elif [[ "$unamestr" == 'Darwin' ]]; then
+    platform='mac'
+fi
+
+if [[ $platform == 'linux' ]]; then
+	if [[ $XDG_CURRENT_DESKTOP == 'KDE' ]]; then
+		alias e='alias_start_dolphin'
+	fi
+	disable_beep
+	set_bash_history
+	set_colored_terminal
+	gnu_conf
+	set_gnu_vars
+	
+elif [[ $platform == 'freebsd' ]]; then
+	:
+elif [[ $platform == 'win' ]]; then
+    gnu_conf
+	alias e='alias_start_explorer'
+    alias p='wpwd'
+	alias c='win_cd'
+	
+	# check for idea terminal, $PWD is default home path
+	if [[ "$PWD" == $HOME ]]; then
+		cd d:
+	fi
+elif [[ $platform == 'mac' ]]; then
+    mac_conf
+fi
+
+# # git autocomplete
+# if [ -f ~/.git-completion.bash ]; then
+#     . ~/.git-completion.bash
+# fi
+
+# autocompetion
+if [ -f /etc/bash_completion ]; then 
+    . /etc/bash_completion
+fi
