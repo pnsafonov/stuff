@@ -1,0 +1,64 @@
+1) clean all not in gitignore, test:
+git clean -xdfn
+    actually clean:
+git clean -xdf
+
+2) autocomplete in linux terminal
+curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -o ~/.git-completion.bash
+
+then in ~/.bashrc
+
+if [ -f ~/.git-completion.bash ]; then
+  . ~/.git-completion.bash
+fi
+
+3) ignore but not delete
+git update-index --assume-unchanged some_file.txt
+
+4) list branches
+git branch
+git branch -a
+
+pavel@DESKTOP-QR70N9G MINGW64 /c/stubit/cpp (master)
+$ git branch -a
+* master
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/master
+  remotes/origin/pavel-a
+  remotes/origin/pavel-release
+
+5) switch to branch
+git checkout feature/git_build
+
+6) clone git repository
+git clone git@192.168.7.10:pavel/stuff
+
+7) reset local changes 
+git reset HEAD --hard
+
+8) git add .
+git commit -m "some change"
+git push
+
+9) revert 1 commit
+git reset HEAD~1 --soft 
+
+10) set user, email for commits
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name"
+
+11) remove untracked files
+git clean -n
+git clean -f
+
+# To remove directories
+git clean -fd
+
+# To remove ignored files
+git clean -fX
+
+# To remove ignored and non-ignored files
+git clean -fx
+
+12) show tags
+git tag
